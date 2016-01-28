@@ -1,0 +1,276 @@
+import pygame                           #<---importing the "pygame" library                                                     
+import time                             #<---importing the "time" library (time is to choose how fast the frames will run)
+import random                           #<---importing the "random" library
+
+
+
+pygame.init()                          
+
+head_img = pygame.image.load("snakehead.png")               #<---uploading images
+apple = pygame.image.load("apple.png")                      #<--- 
+background = pygame.image.load("background.jpg")            #<---
+icon = pygame.image.load("snakehead2.png")                  #<---
+
+white = (255,255,255)                       #<---picking colors and defining them by RGB
+black = (0,0,0)                             #<---
+red = (200,0,0)                             #<---
+light_red = (255,0,0)                       #<---
+green = (34,177,76)                         #<---
+light_green = (0,255,0)                     #<---
+yellow = (200,200,0)                        #<---
+light_yellow = (255,255,0)                  #<---
+
+display_width = 1300                        #<---choosing the size of the screen
+display_hight = 700                         #<---
+
+gameDisplay = pygame.display.set_mode((display_width, display_hight))                   #<---defining "gameDisplay" as our 'work' surface by the size of the screen
+pygame.display.set_caption("Snake")                                                     #<---setting the name of the program/game 
+pygame.display.set_icon(icon)                                                           #<---setting the image of the icon as the icon of the program/game 
+
+
+
+
+clock = pygame.time.Clock()                 #<---limiting the FPS by miliseconds
+
+block_size = 20                             #<---size of the snake's body
+FPS = 20                                    #<---the 'speed' of the frames
+
+direction = "up"                            #<---choosing in wich direction the snake will move. "direction" is just an verible we invented. (continue in the snake definition) 
+
+smallfont = pygame.font.Font("Happy_brown_cat_shadow.ttf", 25)                      #<---importing font and choosing is sizes
+medfont = pygame.font.Font("Happy_brown_cat_shadow.ttf", 50)                        #<---
+lrgfont = pygame.font.Font("Happy_brown_cat_shadow.ttf", 75)                        #<---
+
+
+def pause():
+    paused = True
+    
+    message_to_screen("Paused", black, -100, "medium")
+    message_to_screen("Press 'C' to continue or 'Q' to quit.", black, 30, "small")
+        
+    pygame.display.update()
+        
+    while paused:
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_c:
+                    paused = False
+                if event.key == pygame.K_q:
+                    pygame.quit()
+                    quit()
+                    
+        #gameDisplay.blit(background, [0,0])
+        
+        clock.tick(30)
+        
+
+def game_intro():                               #<---defining the game intro
+    intro = True                                #<---game intro 'ON' 
+    while intro:                                #<---while the game intro is 'ON'
+        
+        for event in pygame.event.get():                #<---for each event in the computer event list
+            if event.type == pygame.QUIT:                   #<---if the player press the 'x' on the top right, the game will shutdown
+                pygame.quit()                               #<---
+                quit()                                      #<---
+                
+            if event.type == pygame.KEYDOWN:                #<---if the player press:
+                if event.key == pygame.K_c:                     #<---the key 'c':
+                    intro = False                                   #<---game intro is 'OFF'
+                if event.key == pygame.K_q:                     #<---the key 'q':
+                    pygame.quit()                                   #<---the game will shutdown
+                    quit()                                          #<---
+        
+        gameDisplay.blit(background, [0,0])                                                   #<---using our defined "gameDisplay" attribute and the "blit" function to make the background image to appeer at the background (the "[0,0]" is the top left corner of the screen and the place where the top left corner of the picture will be)
+        message_to_screen("Welcome to Snake!", black, -180, "large")                                            #<---using our defined "message_to_screen" that we defined down on to display text on the screen
+        message_to_screen("The objective is to eat as many apples as you can.", black, -70, "small")            #<---
+        message_to_screen("GOOD LUCK!", black, 20, "medium")                                                    #<---
+        message_to_screen("Press 'C' to play, 'P' to pause or 'Q' to quit.", black, 120, "small")               #<---
+        
+        
+        button("Play", 314,500,120,60, green, light_green)
+        button("Controls", 590,500,120,60, yellow, light_yellow)
+        button("Quit",  866,500,120,60, red, light_red)
+        
+        
+        pygame.display.update()                         #<---we use this command line to display all we did above on the screen 
+        clock.tick(30)                                  #<---we limit the frames to 30
+                                                                                                                                                                                    
+def score(score):
+    text = smallfont.render("Score: "+str(score), True, black)
+    gameDisplay.blit(text, [0,0])
+    
+    
+def snake(block_size, snakeList):                                                           #<---here we are defining the snake                                                 
+    
+    if direction == "right":                                            #<---here we are defining the directions of the snake's head image by degrees
+        head = pygame.transform.rotate(head_img, 270)                   #<---
+    if direction == "left":                                             #<---
+        head = pygame.transform.rotate(head_img, 90)                    #<---
+    if direction == "up":                                               #<---
+        head = head_img                                                 #<---
+    if direction == "down":                                             #<---
+        head = pygame.transform.rotate(head_img, 180)                   #<---
+    
+    gameDisplay.blit(head, (snakeList[-1][0], snakeList[-1][1]))                                                                                                                      #XnY for where the rectangle beggins
+                                                                                                                                                                                 #|------------------------------------------|
+    for XnY in snakeList[:-1]:                                                                  #<---for 'x' and 'y' attributes in the list called 'snakeList':                  \/                                          \/
+        pygame.draw.rect(gameDisplay, black, [XnY[0],XnY[1],block_size,block_size])             #<---we ask from the computer to draw a rectangle (where, color, [the first 'x' and 'y', the second 'x' and 'y',size of the snakes body, size of the snakes body]  
+                                                                                                                                                                                                        #/\                                        /\
+def text_object(text,color,size):                                                                                                                                                                       # |----------------------------------------|                                            
+    if size == "small":                                                                                                                                                                                        #XnY for where the rectangle ends
+        textSurface = smallfont.render(text , True, color)
+    elif size == "medium":
+        textSurface = medfont.render(text , True, color)
+    elif size == "large":
+        textSurface = lrgfont.render(text , True, color)
+        
+    return textSurface, textSurface.get_rect()
+            
+        
+        
+def text_to_button(msg, color, buttonx, buttony, buttonwidth, buttonhight, size = "small"):
+    textSurf, textRect = text_object (msg, color, size)
+    textRect.center = ((buttonx + (buttonwidth/2)), buttony + (buttonhight/2))
+    gameDisplay.blit(textSurf , textRect)
+
+def message_to_screen(msg,color,y_displace = 0, size = "small"):
+    textSurf, textRect = text_object (msg, color, size)
+    textRect.center = (display_width/2), (display_hight/2) + y_displace
+    gameDisplay.blit(textSurf , textRect)
+    
+def button(text, x, y, width, hight, inactive_color, active_color):                              #<---THIS FUNCTION IS NOT WORKING PROPERLY
+    cur = pygame.mouse.get_pos()
+    
+    if x + width > cur[0] > x and y + hight > cur[1] > y:
+        pygame.draw.rect = (gameDisplay, active_color, (x, y, width, hight))
+    else:
+        pygame.draw.rect = (gameDisplay, inactive_color, (x, y, width, hight))
+        
+    text_to_button(text, black, x, y, width, hight)
+    
+def gameLoop():
+    global direction
+    gameExit = False
+    gameOver = False
+
+    lead_x = display_width / 2
+    lead_y = display_hight / 2
+
+    lead_x_change = 0
+    lead_y_change = 0
+    
+    AppleThickness = 30
+    randAppleX = round(random.randrange(0, display_width - AppleThickness))#/10.0) * 10.0
+    randAppleY = round(random.randrange(0, display_hight - AppleThickness))#/10.0) * 10.0
+    
+    
+    snakeList = []
+    snakeLength = 1
+    
+    while not gameExit:
+        if gameOver == True:
+            #gameDisplay.blit(background, [0,0])
+            #gameDisplay.fill(white)
+            message_to_screen("Game over", red, -50, "large")
+            message_to_screen("press 'C' to play again or 'Q' to quit", black, 50, "small")
+            pygame.display.update()
+             
+        while gameOver == True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    gameOver = False
+                    gameExit = True
+                    
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        gameExit = True
+                        gameOver = False
+                        
+                    if event.key == pygame.K_c:
+                        gameLoop()
+            
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                gameExit = True
+            
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    lead_x_change = -block_size
+                    lead_y_change = 0
+                    direction = "left"
+                    
+                elif event.key == pygame.K_RIGHT:
+                    lead_x_change = block_size
+                    lead_y_change = 0
+                    direction = "right"
+                    
+                elif event.key == pygame.K_UP:
+                    lead_y_change = -block_size
+                    lead_x_change = 0
+                    direction = "up"
+                    
+                elif event.key == pygame.K_DOWN:
+                    lead_y_change = block_size
+                    lead_x_change = 0
+                    direction = "down"
+                    
+                elif event.key == pygame.K_p:
+                    pause()
+                    
+        if lead_x >= display_width or lead_x <= 0 or lead_y >= display_hight or lead_y <= 0:
+            gameOver = True
+        
+            
+        lead_x += lead_x_change
+        lead_y += lead_y_change
+        
+        gameDisplay.blit(background, [0,0])
+        #pygame.draw.rect(gameDisplay, red, [randAppleX,randAppleY,AppleThickness, AppleThickness])
+        gameDisplay.blit(apple , (randAppleX,randAppleY))
+        
+        
+        snakeHead = []
+        
+        snakeHead.append(lead_x)
+        snakeHead.append(lead_y)
+        snakeList.append(snakeHead)
+        
+        if len(snakeList) > snakeLength:
+            del snakeList[0]
+        
+        for eachSegment in snakeList[:-1]:
+            if eachSegment == snakeHead:
+                gameOver = True
+        
+        snake(block_size, snakeList)
+        
+        score(snakeLength - 1)
+        
+        pygame.display.update()
+        
+
+ 
+        if lead_x > randAppleX and lead_x < randAppleX + AppleThickness or lead_x + block_size > randAppleX and lead_x + block_size < randAppleX + AppleThickness:
+            if lead_y > randAppleY and lead_y < randAppleY + AppleThickness:
+                randAppleX = round(random.randrange(0, display_width - AppleThickness))
+                randAppleY = round(random.randrange(0, display_hight - AppleThickness))
+                snakeLength += 1
+            elif lead_y + block_size > randAppleY and lead_y + block_size < randAppleY + AppleThickness:
+                randAppleX = round(random.randrange(0, display_width - AppleThickness))
+                randAppleY = round(random.randrange(0, display_hight - AppleThickness))
+                snakeLength += 1
+                
+                
+        clock.tick(FPS)
+        
+
+    pygame.quit()
+    quit()
+    
+game_intro()
+gameLoop() 
+    
